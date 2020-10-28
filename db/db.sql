@@ -28,3 +28,5 @@ CREATE TABLE employee (
   FOREIGN KEY (manager_id) REFERENCES employee(id),
   PRIMARY KEY (id)
 );
+
+SET FOREIGN_KEY_CHECKS=0;

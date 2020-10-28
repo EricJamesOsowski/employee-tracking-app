@@ -122,45 +122,125 @@ function addRole() {
             },
             {
                 type: 'list',
-                name: 'department_id_name',
+                name: 'department_id',
                 message: 'Which department does this role belong to?',
                 choices: allDepartmentNames
             }])
             .then(function (answer) {
-                //console.log("This is a test of the emergency console logging system. This is not a real emergency.", result);
-
-                // connection.query(`(SELECT id FROM department WHERE ${department_id_name} = name)`, function(err, res){
-                //     let departmentIdNumber = res;
-                // })
-
-                connection.query(`INSERT INTO role (title, salary, department_id) VALUES ("${answer.roleName}", "${answer.roleSalary}", "${departmentIdNumber}");`, function (err, res) {
-                    console.log(`Department "${answer.roleToAdd}" has been added!`)
-                    runApp()
+                let departmentIdNumber = '';
+                connection.query(`(SELECT id FROM department WHERE "${answer.department_id}" = name)`, function (err, res) {
+                    departmentIdNumber = res[0].id;
+                    connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.roleName}', ${answer.roleSalary}, ${departmentIdNumber})`, function (err, res) {
+                        console.log(`Role "${answer.roleName}" has been added with salary ${answer.roleSalary} and id number ${departmentIdNumber}`)
+                        runApp()
+                    })
                 })
+
+
+
             })
     })
 
 }
 
-function REEEEEEEEEEEEEPLACEME() {
+function addEmployee() {
+    connection.query('SELECT * FROM employee', function (err, res) {
+        let allEmployeesFullNames = [];
+        res.forEach(element => {
+            allEmployeesFullNames.push(element.first_name + " " + element.last_name)
+        })
 
-    connection.query('SELECT * FROM role', function (err, res) {
-        if (err) {
-            throw err;
-        }
-        console.table(res)
-        runApp()
+        connection.query('SELECT * FROM role', function (err, res) {
+            let allRoles = [];
+            res.forEach(element => {
+                allRoles.push(element.title)
+            })
+            let result = inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'empFirstName',
+                    message: 'What is the employees first name'
+                },
+                {
+                    type: 'input',
+                    name: 'empLastName',
+                    message: 'What is the employees last name?'
+                },
+                {
+                    type: 'list',
+                    name: 'empRole',
+                    message: 'What role does this employee have in the company?',
+                    choices: allRoles
+                },
+                {
+                    type: 'list',
+                    name: 'empManager',
+                    message: 'Who is this employees manager?',
+                    choices: allEmployeesFullNames
+                }])
+                .then(function (answer) {
+                    let empManagerFirstName = answer.empManager.split(" ");
+                    empManagerFirstName = empManagerFirstName[0]
+                    let roleIdNumber;
+                    connection.query(`(SELECT id FROM role WHERE "${answer.empRole}" = title)`, function (err, res) {
+                        roleIdNumber = res[0].id;
+                        connection.query(`SELECT id FROM employee WHERE '${empManagerFirstName}' = first_name`, function (err, res) {
+                            let manager_id_number = res[0].id;
+                            connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${answer.empFirstName}', '${answer.empLastName}', '${roleIdNumber}', '${manager_id_number}')`, function (err, res) {
+                                console.log("Employee has been added!")
+                                runApp()
+                            })
+                        })
+                    })
+                })
+        })
     })
 }
 
-function REEEEEEEEEEEEEPLACEME() {
+function updateEmployee() {
+    connection.query('SELECT * FROM employee', function (err, res) {
+        let allEmployeesFullNames = [];
+        res.forEach(element => {
+            allEmployeesFullNames.push(element.first_name + " " + element.last_name);
+        })
+        connection.query('SELECT * FROM role', function (err, res) {
+            let allRoles = [];
+            res.forEach(element => {
+                allRoles.push(element.title)
+            })
+            let result = inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'empToUpdate',
+                    message: 'Which employee would you like to update?',
+                    choices: allEmployeesFullNames
+                },
+                {
+                    type: 'list',
+                    name: 'empManager',
+                    message: 'What is the employees new role?',
+                    choices: allRoles
+                }])
+                .then(function (answer) {
+                    let empFirstName = answer.empToUpdate.split(" ");
+                    empFirstName = empFirstName[0];
+                    connection.query(`SELECT id FROM employee WHERE first_name = '${empFirstName}'`, function (err, res) {
+                        empIdToUpdate = res[0].id
+                        connection.query(`SELECT id FROM role WHERE title = '${answer.empManager}'`, function (err, res) {
+                            let newRoleId = res[0].id;
+                            connection.query(`UPDATE employee SET role_id = '${newRoleId}' WHERE id = '${empIdToUpdate}';`, function (err, res) {
+                                console.log('Employee role has been updated!')
+                                runApp()
+                            })
+                        })
+                    })
+                })
+        })
 
-    connection.query('SELECT * FROM role', function (err, res) {
-        if (err) {
-            throw err;
-        }
-        console.table(res)
-        runApp()
     })
 }
 runApp()
+
+// connection.query('SELECT * FROM role', function (err, res) {
+
+// })
